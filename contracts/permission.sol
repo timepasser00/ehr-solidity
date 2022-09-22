@@ -5,17 +5,19 @@ import "./details.sol";
 contract permission is details{
 
     // patient adds or removes the insti who can update their medical report
-    function appprove(string memory t,  string memory _id)
-        public 
-        onlyPatient  
-    {
+    function appprove(string memory _id) public onlyPatient {
         address _address = Id[_id];
-        if(compareStrings(t, "h")){
-            require(isHospital[_address],"Not a hospital");
+        require(isHospital[_address] || isLab[_address], "not a valid address");
+
+        for (uint256 i = 0; i < record[msg.sender].permitted.length; i++) {
+            if (record[msg.sender].permitted[i].instiAddress == _address) {
+                require(
+                    record[msg.sender].permitted[i].status == false,
+                    "already approved"
+                );
+            }
         }
-        
-        // checks weather the entered id of lab or hospital
-        require(isLab[_address] || isHospital[_address] ,"Not a valid address");
+
         institutions memory tmp;
         // address instiAddre = Id[_address];
         tmp.instiAddress = _address;
@@ -23,7 +25,6 @@ contract permission is details{
         // labList[msg.sender].push(tmp);
         record[msg.sender].permitted.push(tmp);
         record[msg.sender].credit++;
-
     }
     // patient remove the approved hospitals and labs 
     function remove(string memory _id)

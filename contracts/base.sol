@@ -13,5 +13,6 @@ contract base is permission{
         owner = msg.sender;
         isOwner[msg.sender] = true;
     }
+    
 
 }

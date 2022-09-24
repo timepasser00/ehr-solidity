@@ -13,7 +13,9 @@ const {setPInfo,
     getId,
     getPInfo,
     hospitalCnt,
-    labCnt
+    labCnt,
+    reExam,
+    medRecordCnt
 } =require('../controller/routeController')
 const router=express.Router()
 
@@ -34,5 +36,7 @@ router.post('/confirm',confirmDisease)
 router.get('/status',healthStatus)
 router.post('/getId',getId);
 router.post('/hCnt',hospitalCnt);
+router.post('/getMedRecordCnt',medRecordCnt)
+router.post('/reExam',reExam)
 
 module.exports=router 

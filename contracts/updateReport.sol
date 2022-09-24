@@ -9,21 +9,18 @@ contract updateReport is details{
     // lab technician at approved lab can add a patient's med info
     function setMedInfoHash(  
         string memory _mHash,
-        string memory _id
-        
+        string memory _id    
     )public
-    isAllowed(worksAt[msg.sender],_id)
     {
         address _patientAddress  = Id[_id];
 
         require(isPatient[_patientAddress], "not a patient" );
-        require(isTech[msg.sender],"not a labTech");
+        require(isAllowed(_id) && isTech[msg.sender],"not a labTech");
 
         uint256 last = record[_patientAddress].totalRecord;
         last += 1;
         record[_patientAddress].medicalInfoHash[last].cid = _mHash;
-        record[_patientAddress].medicalInfoHash[last].consultationCnt = 0;
-        record[_patientAddress].medicalInfoHash[last].confirmationCnt = 0;
+        record[_patientAddress].totalRecord += last;
     }
     // patient or doctors at approved insti can see a patient medical info
     function getMedInfoHash(string memory _id,uint256 _reportId)
@@ -32,21 +29,7 @@ contract updateReport is details{
         address _patientAddress = Id[_id];
         require(isPatient[_patientAddress], "not a patient" );
         require(isHospital[worksAt[msg.sender]] || (isPatient[msg.sender] && msg.sender == _patientAddress) , "not allowed");
-        bool ok = false;
-        if(_patientAddress == msg.sender){
-            ok = true;
-        }else{
-            for(uint256 i=0; i < record[_patientAddress].permitted.length; i++){
-                address instiAddress = record[_patientAddress].permitted[i].instiAddress;
-                bool _status = record[_patientAddress].permitted[i].status;
-                if(instiAddress == worksAt[msg.sender] && _status){
-                    ok = true;
-                    break;
-                }
-
-            }
-        }
-        require(ok,"not a valid request");
+        require(isAllowed(_id),"not a valid request");
         return record[_patientAddress].medicalInfoHash[_reportId].cid;        
     }
 
@@ -56,17 +39,37 @@ contract updateReport is details{
         uint256 _reportId,
         string memory status)
         public
-        isAllowed(worksAt[msg.sender],_id)
+        onlyDoctor
     {
         address _patientAddress = Id[_id];
+        require(isAllowed(_id),"not allowed");
         require(isPatient[_patientAddress], "not a patient" );
-        require(isDoctor[msg.sender],"not a doctor");
-        require(!confirmedBy[msg.sender] , "have confirmed already");
+        require(!record[_patientAddress].medicalInfoHash[_reportId].confirmedBy[msg.sender] , "have confirmed already");
         require(record[_patientAddress].totalRecord >= _reportId,"invalid report Id");
-        confirmedBy[msg.sender] = true;
+        record[_patientAddress].medicalInfoHash[_reportId].confirmedBy[msg.sender] = true;
         record[_patientAddress].medicalInfoHash[_reportId].consultationCnt++;
         if(compareStrings(status ,"true")){
             record[_patientAddress].medicalInfoHash[_reportId].confirmationCnt++;
+        }
+        
+    }
+
+    function reExam(
+        string memory _id,
+        uint256 _reportId,
+        string memory status
+    )public
+    onlyDoctor
+    {
+        address _patientAddress = Id[_id];
+        require(isAllowed(_id),"not Allowed");
+        require(isPatient[_patientAddress], "not a patient" );
+        require(record[_patientAddress].medicalInfoHash[_reportId].confirmedBy[msg.sender] , "have confirmed already");
+        require(record[_patientAddress].totalRecord >= _reportId,"invalid report Id");
+        record[_patientAddress].medicalInfoHash[_reportId].confirmedBy[msg.sender] = true;
+        record[_patientAddress].medicalInfoHash[_reportId].consultationCnt++;
+        if(compareStrings(status ,"false")){
+            record[_patientAddress].medicalInfoHash[_reportId].confirmationCnt--;
         }
         
     }

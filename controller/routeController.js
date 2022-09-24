@@ -185,7 +185,7 @@ const getMedInfo = async(req,res)=>{
     try{
         const curr =  JSON.parse(curr_account);
         const instance = await base.at(contract_address);
-        const cid = await instance.getMedInfoHash(curr.account,{from:currentUserAccount[0]})
+        const cid = await instance.getMedInfoHash(curr.account,curr.reportId,{from:currentUserAccount[0]})
         console.log("cid " + cid);
         const {getFile} = await import('../fetchdata.mjs')
         const file = await getFile(cid);
@@ -196,8 +196,29 @@ const getMedInfo = async(req,res)=>{
         res.send("Invalid Request")
         console.log("this is error message" + error);
     }
+}
 
+const medRecordCnt = async(req,res)=>{
+    const _id = JSON.stringify(req.body);
+    try{
+        const instance = await base.at(contract_address);
+        const cnt = await instance.getMedRecordCnt(_id,{from:currentUserAccount[0]})
+    }catch(error){
+        res.send("Invalid Request")
+        console.log("this is error message" + error);
+    }
+}
 
+const reExam = async(req,res)=>{
+    const ip = JSON.stringify(req.body);
+    try{
+        const details = JSON.parse(ip);
+        const instance = await base.at(contract_address);
+        await instance.reExam(details.id,details.reportId,details.status,{from:currentUserAccount[0]})
+    }catch(error){
+        res.send("Invalid Request")
+        console.log("this is error message" + error);
+    }
 }
 
 const getPInfo = async(req,res)=>{
@@ -313,5 +334,7 @@ module.exports={setPInfo,
     getId,
     getPInfo,
     hospitalCnt,
-    labCnt
+    labCnt,
+    reExam,
+    medRecordCnt
 }

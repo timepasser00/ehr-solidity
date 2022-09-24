@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8;
-
-contract enroll{
+import "./helper.sol";
+contract enroll is helper{
 
     // set of functions for the enrollment of participants in the network
     
@@ -26,16 +26,7 @@ contract enroll{
         require(isOwner[msg.sender],"sender is not owner");
         _;
     }
-
-    modifier onlyHospital(){
-        require(isHospital[msg.sender],"sender is not the hospital admin");
-        _;
-    }
-
-    modifier onlyLab(){
-        require(isLab[msg.sender],"sender is not lab admin");
-        _;
-    }
+    
     modifier onlyPatient(){
         require(isPatient[msg.sender],"sender is not patient");
         _;
@@ -61,38 +52,7 @@ contract enroll{
     
     }
 
-    function compareStrings(string memory a, string memory b) public pure returns (bool) {
-        return (keccak256(abi.encodePacked((a))) == keccak256(abi.encodePacked((b))));
-    }
-
-    // function to convert integers to strings
-    function uint2str( uint256 _i)internal pure returns (string memory str)
-    {
-        if (_i == 0)
-        {
-            return "0";
-        }
-        uint256 j = _i;
-        uint256 length;
-        while (j != 0)
-        {
-            length++;
-            j /= 10;
-        }
-        bytes memory bstr = new bytes(length);
-        uint256 k = length;
-        j = _i;
-        while (j != 0)
-        {
-            bstr[--k] = bytes1(uint8(48 + j % 10));
-            j /= 10;
-        }
-        str = string(bstr);
-    }
-
-    function concat(string memory a,string memory b) public pure returns (string memory){
-        return string(abi.encodePacked(a,b));
-    }
+    
 
 
     // owner add the hosptials , lab  and patients to the network

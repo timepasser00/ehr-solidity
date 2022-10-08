@@ -3,7 +3,6 @@ const {setPInfo,
     addClient,
     currentUser,
     approve,
-    remove,
     setMedInfo,
     addEmployee,
     getMedInfo,
@@ -14,8 +13,10 @@ const {setPInfo,
     getPInfo,
     hospitalCnt,
     labCnt,
-    reExam,
-    medRecordCnt
+    medRecordCnt,
+    patientCnt,
+    reffer,
+    approveRefferedDoctor
 } =require('../controller/routeController')
 const router=express.Router()
 
@@ -26,7 +27,6 @@ router.post('/currentUser',currentUser);
 router.post('/patientDetails',setPInfo)
 router.post('/owner',addClient)
 router.post('/approve',approve)
-router.post('/remove',remove)
 router.post('/setMedInfo',setMedInfo)
 router.post('/institution',addEmployee)
 router.post('/getMedInfo',getMedInfo);
@@ -37,6 +37,8 @@ router.get('/status',healthStatus)
 router.post('/getId',getId);
 router.post('/hCnt',hospitalCnt);
 router.post('/getMedRecordCnt',medRecordCnt)
-router.post('/reExam',reExam)
+router.post('/patientCnt',patientCnt)
+router.post('/reffer',reffer)
+router.post('/approveRefferedDoctor',approveRefferedDoctor)
 
 module.exports=router 

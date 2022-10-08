@@ -7,13 +7,15 @@ const localhost = "http://127.0.0.1:9545";
 const web3 = new Web3(localhost);
 const provider = new Web3.providers.HttpProvider(localhost);
 
-const contract_address = '0x17199D74a993FB3F4FACB1a11b26a1a98799ad7b'
+const contract_address = '0x608180F29aE15fbc88d5147364148d551Df41976'
 const base = contract(contract_data);
 base.setProvider(provider);
 
 
 let currentUserAccount;
 
+
+// gives the total number of labs in the network
 const labCnt = async(req,res)=>{
     try{
         const instance = await base.at(contract_address);
@@ -25,7 +27,6 @@ const labCnt = async(req,res)=>{
 
     }
 }
-
 
 // patient sets it's personal information
 const setPInfo = async(req,res) =>{
@@ -58,6 +59,7 @@ const addClient = async(req,res) =>{
     // console.log(req.body);
     try{
         const instance = await base.at(contract_address);
+        console.log(currentUserAccount[0]);
         await instance.addClient(account,category,{from:currentUserAccount[0]})
         console.log("Client enrolled");
         // const id = await instance.Id(account);
@@ -71,12 +73,11 @@ const addClient = async(req,res) =>{
 }
 
 
-// get the hospital count 
-
+// total hospital present in the network
 const hospitalCnt = async(req,res)=>{
     
     try{
-        console.log("here");
+        // console.log("here");
         const instance = await base.at(contract_address);
         const hCnt = await instance.hospitalCnt();
         res.send(hCnt); 
@@ -86,7 +87,20 @@ const hospitalCnt = async(req,res)=>{
         console.log("This is error message : " + error);
     }
 }
-
+ // total number of patient in the network
+const patientCnt = async(req,res)=>{
+    
+    try{
+        // console.log("here");
+        const instance = await base.at(contract_address);
+        const pCnt = await instance.patientCnt();
+        res.send(pCnt); 
+       
+    }catch(error){
+        res.send("Invalid Request");
+        console.log("This is error message : " + error);
+    }
+}
 
 //to know who is the msg sender
 const currentUser = async(req,res)=>{
@@ -96,6 +110,7 @@ const currentUser = async(req,res)=>{
     res.send("Welcome !!");
 }
 
+// for hospitals and labs to add doctor and lab tech. in the network
 const addEmployee = async(req,res)=>{
     const curr_account = JSON.stringify(req.body);
     // console.log(req.body);
@@ -116,21 +131,18 @@ const addEmployee = async(req,res)=>{
     
 
 }
-
+// for patient to approve the hospital and labs in the n/w who can see or modify the health record
 const approve = async(req,res)=>{
     
     // console.log("sent data " + account,category,currentUserAccount);
-    const curr_account = JSON.stringify(req.body);
+    const details = JSON.stringify(req.body);
     try{
-        const curr =  JSON.parse(curr_account);
+        const curr =  JSON.parse(details);
         // console.log("curr: "+ curr.account , currentUserAccount[0]);    
-        
         const instance = await base.at(contract_address);
-        // const val = await instance.Id(curr.account);
-        // console.log("val " + val);
-        await instance.appprove(curr.account,{from:currentUserAccount[0]})
+        await instance.modifyStatus(curr.account,curr.action,{from:currentUserAccount[0]})
         console.log("Approved by patient");
-        res.send("Successfully Approved");
+        res.send("Action Successful");
     }catch(error){
         res.send("Invalid Request");
         console.log("This is error message : " + error);
@@ -138,24 +150,44 @@ const approve = async(req,res)=>{
     }
 }
 
+// for doctor to reffer a medical case of a patient to a specialist doctor
 
-const remove = async(req,res) =>{
-    const curr_account = JSON.stringify(req.body);
+const reffer = async(req,res)=>{
 
+    const details = JSON.stringify(req.body);
     try{
-        const curr =  JSON.parse(curr_account);
+        const curr =  JSON.parse(details);
+        // console.log("curr: "+ curr.account , currentUserAccount[0]);    
         const instance = await base.at(contract_address);
-        await instance.remove(curr.account,{from:currentUserAccount[0]})
-        console.log("Removed by patient");
-        res.send("Successfully Removed");
+        await instance.reffer(curr.id,curr.pId,curr.rId,{from:currentUserAccount[0]})
+        console.log("Reffered by a doctor");
+        res.send("Action Successful");
     }catch(error){
         res.send("Invalid Request");
         console.log("This is error message : " + error);
 
     }
-
 }
 
+// for a patient to approve the reffered doctor 
+
+const approveRefferedDoctor = async(req,res)=>{
+    const details = JSON.stringify(req.body);
+    try{
+        const curr =  JSON.parse(details);
+        // console.log("curr: "+ curr.account , currentUserAccount[0]);    
+        const instance = await base.at(contract_address);
+        await instance.approveRefferedDoctor(curr.id,curr.rId,{from:currentUserAccount[0]})
+        console.log("Reffered by a doctor");
+        res.send("Action Successful");
+    }catch(error){
+        res.send("Invalid Request");
+        console.log("This is error message : " + error);
+
+    }
+}
+
+// for lab tech to write medical report of a patient
 const setMedInfo = async (req,res)=>{
     const info = JSON.stringify(req.body);
     try{
@@ -178,6 +210,7 @@ const setMedInfo = async (req,res)=>{
     }
 }
 
+// for patient and doctor to get the medical report
 
 const getMedInfo = async(req,res)=>{
     const curr_account = JSON.stringify(req.body);
@@ -185,7 +218,8 @@ const getMedInfo = async(req,res)=>{
     try{
         const curr =  JSON.parse(curr_account);
         const instance = await base.at(contract_address);
-        const cid = await instance.getMedInfoHash(curr.account,curr.reportId,{from:currentUserAccount[0]})
+        console.log(curr.account);
+        const cid = await instance.getMedInfoHash(curr.account,curr.rId,{from:currentUserAccount[0]})
         console.log("cid " + cid);
         const {getFile} = await import('../fetchdata.mjs')
         const file = await getFile(cid);
@@ -198,28 +232,25 @@ const getMedInfo = async(req,res)=>{
     }
 }
 
+// get the total medical report cnt of a patient
+
 const medRecordCnt = async(req,res)=>{
-    const _id = JSON.stringify(req.body);
+    // const _id = JSON.stringify(req.body);
+    const curr_account = JSON.stringify(req.body);
     try{
+        const curr =  JSON.parse(curr_account);
+        // console.log(curr.account);
         const instance = await base.at(contract_address);
-        const cnt = await instance.getMedRecordCnt(_id,{from:currentUserAccount[0]})
+        const cnt = await instance.getMedRecordCnt(curr.account,{from:currentUserAccount[0]})
+        // console.log(cnt);
+        res.send(cnt);
     }catch(error){
         res.send("Invalid Request")
         console.log("this is error message" + error);
     }
 }
 
-const reExam = async(req,res)=>{
-    const ip = JSON.stringify(req.body);
-    try{
-        const details = JSON.parse(ip);
-        const instance = await base.at(contract_address);
-        await instance.reExam(details.id,details.reportId,details.status,{from:currentUserAccount[0]})
-    }catch(error){
-        res.send("Invalid Request")
-        console.log("this is error message" + error);
-    }
-}
+// to get the personal information of a patient
 
 const getPInfo = async(req,res)=>{
     const curr_account = JSON.stringify(req.body);
@@ -243,6 +274,9 @@ const getPInfo = async(req,res)=>{
 
 }
 
+
+// returns the credit score of a patient
+
 const getCreditScore = async(req,res) => {
     // console.log("get fun :: ")
     const curr_account = JSON.stringify(req.body);
@@ -261,7 +295,9 @@ const getCreditScore = async(req,res) => {
         console.log("This is error message : " + error);
     }
 }
-// doctors confirms the disease
+
+// doctors confirms the disease of a patient
+
 const confirmDisease = async(req,res)=>{
     const data = JSON.stringify(req.body);
     try{
@@ -270,7 +306,7 @@ const confirmDisease = async(req,res)=>{
         // console.log(curr);
         console.log(curr.status);
         const instance = await base.at(contract_address);
-        await instance.confirmDisease(curr.patientAccount,curr.status,{from:currentUserAccount[0]})
+        await instance.confirmDisease(curr.account,curr.rId,curr.status,{from:currentUserAccount[0]})
         res.send("Successfully confirmed");
     }catch(error){
         res.send("Invalid Request");
@@ -325,7 +361,6 @@ module.exports={setPInfo,
     currentUser,
     addEmployee,
     approve,
-    remove,
     setMedInfo,
     getMedInfo,
     getCreditScore,
@@ -335,6 +370,8 @@ module.exports={setPInfo,
     getPInfo,
     hospitalCnt,
     labCnt,
-    reExam,
-    medRecordCnt
+    medRecordCnt,
+    patientCnt,
+    reffer,
+    approveRefferedDoctor
 }

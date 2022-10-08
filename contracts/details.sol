@@ -13,6 +13,7 @@ contract details is enroll{
         uint256 consultationCnt;
         uint256 confirmationCnt;
         mapping (address => bool)confirmedBy;
+        mapping (address => uint256)refferedTo; // 0 - initial state , 1 - reffered by doctor , 2 - approved by patient
     }
 
     struct patientRecord{
@@ -48,11 +49,10 @@ contract details is enroll{
         x =  record[_address].personalInfoHash;
         return x;
     }
-
+    // 
     function getMedRecordCnt(string memory _id)
     public 
     view
-    // isAllowed(_id)
     returns(uint256 x){
         address _address = Id[_id];
         require(isPatient[_address] && isAllowed(_id),"not a patient's id");
@@ -83,6 +83,7 @@ contract details is enroll{
     }
 
     // checks if the sender works at a insti approved by the patient
+    
     function isAllowed(string memory _id )public view returns(bool){
         address _patientAddress = Id[_id];
         require(isPatient[_patientAddress],"not a patient's id");
@@ -103,5 +104,6 @@ contract details is enroll{
         return false;
         
     }
+    
 
 }

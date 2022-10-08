@@ -39,6 +39,32 @@ contract permission is details{
         
 
     }
+    function reffer(
+        string memory _id,
+        string memory _pId,
+        uint256 rId
+    )public
+    onlyDoctor
+    {
+        address _patientAddress = Id[_pId];
+        address _docAddress = Id[_id];
+        require(isPatient[_patientAddress] && isDoctor[_docAddress], "not valid params");
+        require(isAllowed(_pId),"not allowed");
+        record[_patientAddress].medicalInfoHash[rId].refferedTo[_docAddress] = 1;
+    }
+
+    function approveRefferedDoctor(
+        string memory _id,
+        uint256 rId
+    )public
+    onlyPatient
+    {
+        address _docAddress = Id[_id];
+        require(isDoctor[_docAddress], "not a doctor");
+        require(record[msg.sender].medicalInfoHash[rId].refferedTo[_docAddress] == 1, "not a valid request");
+        record[msg.sender].medicalInfoHash[rId].refferedTo[_docAddress] = 2; 
+    }
+    
 
     
 
